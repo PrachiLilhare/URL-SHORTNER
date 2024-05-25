@@ -10,10 +10,13 @@ import (
 )
 
 func init() {
-	//initialize mapper which is global variable
+	//Technique 1 : initialize mapper which is global variable.
 	models.UrlMapper = &models.UrlStructure{
 		KeyMapping: make(map[string]string),
 	}
+
+	//Technique 2 : using redis we can store and fetch short url.
+	models.InitRedis()
 }
 
 func main() {
@@ -23,7 +26,21 @@ func main() {
 		w.Write([]byte("server is running..."))
 	})
 
-	r.Post("/short-url", handler.CreatUrlShortnerHandler)
-	r.Get("/short/{key}", handler.RedirectToShortGeneratedUrl)
-	http.ListenAndServe(":3007", r)
+	/*
+		Technique 1 : two api end point is initialize
+		POST - generate url and GET - redirect to the url
+	*/
+	r.Post(models.ShortUrl, handler.CreatUrlShortnerHandler)
+
+	/*
+		Technique 2 : two api end point is initialize using redis
+		POST - generate url and GET - redirect to the url
+	*/
+	r.Post(models.ShortUrlRedis, handler.CreateUrlShortnerHandlerUsingRedis)
+	/*
+		GET - to redirect to url
+	*/
+	r.Get(models.RedirectShortUrl, handler.RedirectToShortGeneratedUrl)
+
+	http.ListenAndServe(":"+models.Port, r)
 }
